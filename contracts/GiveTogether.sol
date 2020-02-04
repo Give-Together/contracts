@@ -1,4 +1,6 @@
 pragma solidity ^0.6.1;
+
+
 /**
 * Give Together
 * a no loss way to give to a
@@ -12,6 +14,11 @@ pragma solidity ^0.6.1;
 * accured interest will be redeemed at this contract address
 * which will then be sent to the charity of the week
 */
+abstract contract ERC20Token {
+   function transferFrom(address sender, address recipient, uint256 amount) virtual external returns (bool);
+   function balanceOf(address owner) virtual external view returns (uint256);
+   function approve(address spender, uint256 amount) virtual external returns (bool);
+}
 contract GiveTogether  {
     address payable public currentCharity;
     address public owner;
@@ -21,7 +28,8 @@ contract GiveTogether  {
     uint256 public currentDate;
     uint256 public sendDonationTime;
     uint256 private oneWeek = 1 weeks;
-    uint256 public totalDonation = 0;
+    uint256 public totalDonation;
+    uint256 public rDaiBalance;
     bytes32 private N;
 
     struct Charity  {
@@ -94,15 +102,15 @@ contract GiveTogether  {
         if (msg.value > 0) {
             // Adding to total donation
             totalDonation = totalDonation +  msg.value;
-            // Sends to current charity also reverts the transfer.
+            // Sending any ETH in the account
             if (!currentCharity.send(address(this).balance)) revert();
+            withdrawRDAI();
         }
         // Getting a new charity and send donation time
         // are less than current time that means
         // the previous charity expired
         if(now >= currentDate + sendDonationTime) {
            currentDate = now;
-           sendDonationTime = 1 weeks - 1 hours;
            currentCharity = generateNewCharity();
         }
     }
@@ -122,6 +130,18 @@ contract GiveTogether  {
         return currentCharity;
     }
 
+    /**
+    * Withdraws rDAI and ETH balance to current charity
+    */
+    function withdrawRDAI() public {
+        ERC20Token tok = ERC20Token(0x261b45D85cCFeAbb11F022eBa346ee8D1cd488c0);
+        rDaiBalance = tok.balanceOf(address(this));
+        totalDonation = totalDonation + rDaiBalance;
+        require(rDaiBalance > 0);
+        tok.approve(address(this), rDaiBalance);
+        tok.transferFrom(address(this), currentCharity, rDaiBalance);
+        rDaiBalance = tok.balanceOf(address(this));
+    }
 
     /**
     * Adds a charity if it is not there already
@@ -159,6 +179,7 @@ contract GiveTogether  {
         sendDonationTime = _time;
     }
 
+
     /**
     * Gets name and website for each charity
     * based on addres
@@ -177,6 +198,15 @@ contract GiveTogether  {
     */
     function getNumCharities() public view returns(uint) {
         return charityAccts.length;
+    }
+    
+    /**
+    * Sets new owner
+    * @param newOwner, new contract owner
+    */
+    function transferOwner(address newOwner) public isOwner {
+        require(msg.sender == owner);
+        owner = newOwner;
     }
 
 }
