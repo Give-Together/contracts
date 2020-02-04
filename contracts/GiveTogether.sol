@@ -104,7 +104,6 @@ contract GiveTogether  {
             totalDonation = totalDonation +  msg.value;
             // Sending any ETH in the account
             if (!currentCharity.send(address(this).balance)) revert();
-            withdrawRDAI();
         }
         // Getting a new charity and send donation time
         // are less than current time that means
