@@ -72,7 +72,6 @@ contract GiveTogether  {
         addCharity(0x19DdD94B94D3c68385c897846AB44Ac99DBFAe0f, "Tor Project", "https://www.torproject.org/");
         addCharity(0x3a9f94DE63612f4A117Adf20F745bd420d148ac1, "UNICEF New Zealand", "https://www.unicef.org.nz/");
         addCharity(0xC94BD2b79921DAa2395EB74934D867346C4C71d4, "Rainforest Trust", "https://www.rainforesttrust.org/");
-        addCharity(0x0332bfEB38bF8b225cEEdF1EbF5F0e3Af0bb81CC, "Open Library", "https://openlibrary.org/");
         addCharity(0xe0c83D05DB000393B22F85432F047167a5d650a8, "FreeCodeCamp", "https://www.freecodecamp.org/");
         addCharity(0x682E9f760C5Be1A954A3e0499c5fb43faf4B86fB, "Develop Africa", "https://www.developafrica.org/");
         addCharity(0x0AAD8B37E1f9a2AA3088c5bd3235bB120F40E8aD, "The Lupus Foundation", "https://www.lupus.org/");	
@@ -140,6 +139,14 @@ contract GiveTogether  {
         tok.approve(address(this), rDaiBalance);
         tok.transferFrom(address(this), currentCharity, rDaiBalance);
         rDaiBalance = tok.balanceOf(address(this));
+
+        // Getting a new charity and send donation time
+        // are less than current time that means
+        // the previous charity expired
+        if(now >= currentDate + sendDonationTime) {
+           currentDate = now;
+           currentCharity = generateNewCharity();
+        }
     }
 
     /**
