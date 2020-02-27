@@ -163,7 +163,7 @@ contract GiveTogether  {
     */
     function removeCharity(address payable _addr) public isOwner {
        for (uint i = 0; i < charityAccts.length; i++) {
-           if (charityAccts[i] != _addr) {
+           if (charityAccts[i] == _addr) {
                // Will leave empty space in the array
                delete charityAccts[i];
            }
